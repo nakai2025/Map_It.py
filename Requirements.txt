@@ -1,0 +1,22 @@
+streamlit==1.32.0
+pandas==2.1.4
+numpy==1.26.4
+openpyxl==3.1.2
+xlrd==2.0.1
+
+How to use this file:
+Create the file: Save the above content in a file named requirements.txt in the same directory as your Python script
+
+Install dependencies: Open your command line/terminal and run:
+
+bash
+pip install -r requirements.txt
+Run your application:
+
+bash
+streamlit run your_script_name.py
+Alternative - if you want to generate it from your current environment:
+If you've already installed the packages, you can generate the requirements file with:
+
+bash
+pip freeze > requirements.txt
