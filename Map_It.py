@@ -1,6 +1,5 @@
 import os
 import warnings
-import pip
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -11,8 +10,6 @@ import base64
 import unicodedata
 import openpyxl
 import xlrd
-from tkinter import filedialog
-from tkinter import Tk
 
 warnings.filterwarnings("ignore", category=UserWarning, module="streamlit.runtime.scriptrunner.script_runner")
 
@@ -768,7 +765,7 @@ def convert_file(uploaded_file, effective_date):
                     converted_data.append({
                         'Contract No': merge['contract_no'],
                         'Transaction Type': get_transaction_type(transaction['description']),
-                        'Description': transaction['description'],  # ONLY CHANGE: removed truncation
+                        'Description': transaction['description'],
                         'Amount': transaction['amount'],
                         'Value Date': effective_date.strftime('%d-%b-%y'),
                         'Effective Date': effective_date.strftime('%d-%b-%y'),
@@ -777,7 +774,7 @@ def convert_file(uploaded_file, effective_date):
                         'Payee': merge['payee']
                     })
 
-            # Process individual rows
+        # Process individual rows
         for idx, row in df.iterrows():
             if idx not in processed_indices:
                 contract_no = clean_cell_value(row[contract_col])
@@ -790,7 +787,7 @@ def convert_file(uploaded_file, effective_date):
                     converted_data.append({
                         'Contract No': contract_no,
                         'Transaction Type': get_transaction_type(transaction['description']),
-                        'Description': transaction['description'],  # ONLY CHANGE: removed truncation
+                        'Description': transaction['description'],
                         'Amount': transaction['amount'],
                         'Value Date': effective_date.strftime('%d-%b-%y'),
                         'Effective Date': effective_date.strftime('%d-%b-%y'),
@@ -823,48 +820,12 @@ def create_download_link(df, uploaded_filename):
 
     csv = df.to_csv(index=False)
     b64 = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}" style="text-decoration: none;" '
-    href += 'onclick="this.download=\'{filename}\'; this.href=\'data:application/octet-stream;base64,{b64}\'"'
-    href += '>'
+    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}" style="text-decoration: none;">'
     href += '<button style="background: linear-gradient(135deg, #63328a 0%, #f9c846 100%); '
     href += 'color: white; border: none; padding: 12px 24px; border-radius: 8px; '
-    href += 'font-weight: bold; cursor: pointer;">📥 Download CSV (Read-Only)</button></a>'
+    href += 'font-weight: bold; cursor: pointer;">📥 Download CSV</button></a>'
     return href
 
-def save_csv_file(df, uploaded_filename):
-    """Save CSV file to user-selected location"""
-    try:
-        # Initialize Tkinter in a way that works with Streamlit
-        root = Tk()
-        root.withdraw()  # Hide the main window
-        root.attributes('-topmost', True)  # Bring to front
-        root.update_idletasks()  # Process pending events
-
-        # Get the base filename without extension
-        base_name = os.path.splitext(uploaded_filename)[0]
-        default_filename = f"{base_name}_converted.csv"
-
-        # Open file dialog to choose save location
-        file_path = filedialog.asksaveasfilename(
-            parent=root,  # Ensure dialog is properly parented
-            defaultextension=".csv",
-            filetypes=[("CSV files", "*.csv")],
-            initialfile=default_filename,
-            title="Choose where to save the converted file"
-        )
-
-        if file_path:  # If user didn't cancel
-            df.to_csv(file_path, index=False)
-            st.success(f"File successfully saved to: {file_path}")
-        else:
-            st.warning("Save operation cancelled")
-
-        root.destroy()  # Clean up properly
-
-    except Exception as e:
-        st.error(f"Error saving file: {str(e)}")
-        if 'root' in locals():
-            root.destroy()
 
 def main():
     # Header
@@ -924,26 +885,9 @@ def main():
                 st.info(f"Showing first 5 rows of {len(result_df)} total transactions")
 
                 # Download options
-                st.markdown("### 💾 Save Results")
-
-                # Create two columns for the download options
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    # Direct download link
-                    st.markdown("###")
-                    st.markdown("**Quick Download**")
-                    st.markdown("Download the file immediately with a click")
-                    download_link = create_download_link(result_df, uploaded_file.name)
-                    st.markdown(download_link, unsafe_allow_html=True)
-
-                with col2:
-                    # File dialog save option
-                    st.markdown("###")
-                    st.markdown("**Choose Save Location**")
-                    st.markdown("Select where to save the file on your computer")
-                    if st.button('🗂️ Choose Save Location', key='save_button'):
-                        save_csv_file(result_df, uploaded_file.name)
+                st.markdown("### 💾 Download Results")
+                download_link = create_download_link(result_df, uploaded_file.name)
+                st.markdown(download_link, unsafe_allow_html=True)
 
             # Show transaction type breakdown
             st.markdown("### 📊 Transaction Breakdown")
